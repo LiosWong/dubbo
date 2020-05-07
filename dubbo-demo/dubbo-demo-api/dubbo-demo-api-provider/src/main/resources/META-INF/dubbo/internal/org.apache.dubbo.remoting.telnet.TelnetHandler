@@ -7,3 +7,4 @@ trace=org.apache.dubbo.qos.legacy.TraceTelnetHandler
 count=org.apache.dubbo.qos.legacy.CountTelnetHandler
 select=org.apache.dubbo.qos.legacy.SelectTelnetHandler
 shutdown=org.apache.dubbo.qos.legacy.ShutdownTelnetHandler
+ready=org.apache.dubbo.qos.command.impl.Ready
