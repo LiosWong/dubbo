@@ -17,6 +17,7 @@
 package com.alibaba.dubbo.test.provider;
 
 import com.alibaba.dubbo.config.annotation.Service;
+import com.alibaba.dubbo.demo.BeanParam;
 import com.alibaba.dubbo.demo.DemoService;
 
 /**
@@ -36,5 +37,10 @@ public class DefaultDemoService implements DemoService {
     public String sayHello(String name) {
         return "DefaultDemoService - sayHell() : " + name;
     }
+
+	@Override
+	public String hello(BeanParam beanParam) {
+		return null;
+	}
 
 }
