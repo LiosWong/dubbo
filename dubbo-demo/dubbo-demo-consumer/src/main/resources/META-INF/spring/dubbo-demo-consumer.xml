@@ -35,4 +35,7 @@
 		<dubbo:method name="sayHello" async="true"/>
 	</dubbo:reference>
 
+	<dubbo:reference id="helloService" check="false" interface="com.alibaba.dubbo.demo.HelloService" retries="0" timeout="10000000">
+	</dubbo:reference>
+
 </beans>
