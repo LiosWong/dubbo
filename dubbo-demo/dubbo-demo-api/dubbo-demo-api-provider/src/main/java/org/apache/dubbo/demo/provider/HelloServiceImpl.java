@@ -15,7 +15,7 @@ import org.apache.dubbo.demo.HelloService;
  */
 public class HelloServiceImpl implements HelloService {
     @Override
-    public String say() {
+    public String hello() {
         return "hello";
     }
 }

@@ -12,5 +12,5 @@ package org.apache.dubbo.demo;
  * @author wenchao.wang
  */
 public interface HelloService {
-    String say();
+    String hello();
 }
