@@ -56,6 +56,11 @@ public class MockInvocation implements Invocation {
         return null;
     }
 
+    @Override
+    public String getProtocolServiceKey() {
+        return null;
+    }
+
     public String getMethodName() {
         return "echo";
     }
@@ -83,12 +88,32 @@ public class MockInvocation implements Invocation {
     }
 
     @Override
+    public void setAttachment(String key, String value) {
+        setObjectAttachment(key, value);
+    }
+
+    @Override
     public void setAttachment(String key, Object value) {
+        setObjectAttachment(key, value);
+    }
+
+    @Override
+    public void setObjectAttachment(String key, Object value) {
         attachments.put(key, value);
     }
 
     @Override
+    public void setAttachmentIfAbsent(String key, String value) {
+        setObjectAttachmentIfAbsent(key, value);
+    }
+
+    @Override
     public void setAttachmentIfAbsent(String key, Object value) {
+        setObjectAttachmentIfAbsent(key, value);
+    }
+
+    @Override
+    public void setObjectAttachmentIfAbsent(String key, Object value) {
         attachments.put(key, value);
     }
 

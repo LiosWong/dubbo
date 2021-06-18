@@ -20,6 +20,8 @@ import org.apache.dubbo.common.config.configcenter.DynamicConfiguration;
 import org.apache.dubbo.common.context.FrameworkExt;
 import org.apache.dubbo.common.context.LifecycleAdapter;
 import org.apache.dubbo.common.extension.DisableInject;
+import org.apache.dubbo.common.logger.Logger;
+import org.apache.dubbo.common.logger.LoggerFactory;
 import org.apache.dubbo.config.AbstractConfig;
 import org.apache.dubbo.config.ConfigCenterConfig;
 import org.apache.dubbo.config.context.ConfigConfigurationAdapter;
@@ -30,10 +32,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 public class Environment extends LifecycleAdapter implements FrameworkExt {
+    private static final Logger logger = LoggerFactory.getLogger(Environment.class);
     public static final String NAME = "environment";
 
     private final PropertiesConfiguration propertiesConfiguration;
@@ -42,8 +43,9 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
     private final InmemoryConfiguration externalConfiguration;
     private final InmemoryConfiguration appExternalConfiguration;
 
-    private final ConcurrentMap<AbstractConfig, CompositeConfiguration> prefixedConfigurations = new ConcurrentHashMap<>();
     private CompositeConfiguration globalConfiguration;
+    private CompositeConfiguration dynamicGlobalConfiguration;
+
 
     private Map<String, String> externalConfigurationMap = new HashMap<>();
     private Map<String, String> appExternalConfigurationMap = new HashMap<>();
@@ -116,12 +118,6 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
      * @return
      */
     public synchronized CompositeConfiguration getPrefixedConfiguration(AbstractConfig config) {
-//        CompositeConfiguration prefixedConfiguration =
-//                prefixedConfigurations.putIfAbsent(config, new CompositeConfiguration(config.getPrefix(), config.getId()));
-//        if (prefixedConfiguration != null) {
-//            return prefixedConfiguration;
-//        }
-//        prefixedConfiguration = prefixedConfigurations.get(config);
         CompositeConfiguration prefixedConfiguration = new CompositeConfiguration(config.getPrefix(), config.getId());
         Configuration configuration = new ConfigConfigurationAdapter(config);
         if (this.isConfigCenterFirst()) {
@@ -155,9 +151,6 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
     public Configuration getConfiguration() {
         if (globalConfiguration == null) {
             globalConfiguration = new CompositeConfiguration();
-            if (dynamicConfiguration != null) {
-                globalConfiguration.addConfiguration(dynamicConfiguration);
-            }
             globalConfiguration.addConfiguration(systemConfiguration);
             globalConfiguration.addConfiguration(environmentConfiguration);
             globalConfiguration.addConfiguration(appExternalConfiguration);
@@ -165,6 +158,21 @@ public class Environment extends LifecycleAdapter implements FrameworkExt {
             globalConfiguration.addConfiguration(propertiesConfiguration);
         }
         return globalConfiguration;
+    }
+
+    public Configuration getDynamicGlobalConfiguration() {
+        if (dynamicGlobalConfiguration == null) {
+            if (dynamicConfiguration == null) {
+                if (logger.isWarnEnabled()) {
+                    logger.warn("dynamicConfiguration is null , return globalConfiguration.");
+                }
+                return globalConfiguration;
+            }
+            dynamicGlobalConfiguration = new CompositeConfiguration();
+            dynamicGlobalConfiguration.addConfiguration(dynamicConfiguration);
+            dynamicGlobalConfiguration.addConfiguration(getConfiguration());
+        }
+        return dynamicGlobalConfiguration;
     }
 
     public boolean isConfigCenterFirst() {

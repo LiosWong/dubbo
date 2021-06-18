@@ -16,6 +16,7 @@
  */
 package org.apache.dubbo.rpc;
 
+import org.apache.dubbo.common.Experimental;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.threadlocal.InternalThreadLocal;
 import org.apache.dubbo.common.utils.CollectionUtils;
@@ -33,8 +34,12 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Future;
 
 import static org.apache.dubbo.common.constants.CommonConstants.CONSUMER_SIDE;
+import static org.apache.dubbo.common.constants.CommonConstants.DUBBO;
+import static org.apache.dubbo.common.constants.CommonConstants.GROUP_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.PROTOCOL_KEY;
 import static org.apache.dubbo.common.constants.CommonConstants.PROVIDER_SIDE;
 import static org.apache.dubbo.common.constants.CommonConstants.SIDE_KEY;
+import static org.apache.dubbo.common.constants.CommonConstants.VERSION_KEY;
 import static org.apache.dubbo.rpc.Constants.ASYNC_KEY;
 import static org.apache.dubbo.rpc.Constants.RETURN_KEY;
 
@@ -157,6 +162,15 @@ public class RpcContext {
      * @see org.apache.dubbo.rpc.filter.ContextFilter
      */
     public static void removeContext() {
+        removeContext(false);
+    }
+
+    /**
+     * customized for internal use.
+     *
+     * @param checkCanRemove if need check before remove
+     */
+    public static void removeContext(boolean checkCanRemove) {
         if (LOCAL.get().canRemove()) {
             LOCAL.remove();
         }
@@ -471,7 +485,7 @@ public class RpcContext {
     }
 
     /**
-     * use {@link #getObjectAttachment(String)} instead.
+     * also see {@link #getObjectAttachment(String)}.
      *
      * @param key
      * @return attachment
@@ -490,6 +504,7 @@ public class RpcContext {
      * @param key
      * @return attachment
      */
+    @Experimental("Experiment api for supporting Object transmission")
     public Object getObjectAttachment(String key) {
         return attachments.get(key);
     }
@@ -501,7 +516,16 @@ public class RpcContext {
      * @param value
      * @return context
      */
+    public RpcContext setAttachment(String key, String value) {
+        return setObjectAttachment(key, (Object) value);
+    }
+
     public RpcContext setAttachment(String key, Object value) {
+        return setObjectAttachment(key, value);
+    }
+
+    @Experimental("Experiment api for supporting Object transmission")
+    public RpcContext setObjectAttachment(String key, Object value) {
         if (value == null) {
             attachments.remove(key);
         } else {
@@ -536,6 +560,7 @@ public class RpcContext {
      *
      * @return attachments
      */
+    @Experimental("Experiment api for supporting Object transmission")
     public Map<String, Object> getObjectAttachments() {
         return attachments;
     }
@@ -546,7 +571,6 @@ public class RpcContext {
      * @param attachment
      * @return context
      */
-    @Deprecated
     public RpcContext setAttachments(Map<String, String> attachment) {
         this.attachments.clear();
         if (attachment != null && attachment.size() > 0) {
@@ -561,6 +585,7 @@ public class RpcContext {
      * @param attachment
      * @return context
      */
+    @Experimental("Experiment api for supporting Object transmission")
     public RpcContext setObjectAttachments(Map<String, Object> attachment) {
         this.attachments.clear();
         if (attachment != null && attachment.size() > 0) {
@@ -774,4 +799,61 @@ public class RpcContext {
         return asyncContext;
     }
 
+    // RPC service context updated before each service call.
+    private URL consumerUrl;
+
+    public String getGroup() {
+        if (consumerUrl == null) {
+            return null;
+        }
+        return consumerUrl.getParameter(GROUP_KEY);
+    }
+
+    public String getVersion() {
+        if (consumerUrl == null) {
+            return null;
+        }
+        return consumerUrl.getParameter(VERSION_KEY);
+    }
+
+    public String getInterfaceName() {
+        if (consumerUrl == null) {
+            return null;
+        }
+        return consumerUrl.getServiceInterface();
+    }
+
+    public String getProtocol() {
+        if (consumerUrl == null) {
+            return null;
+        }
+        return consumerUrl.getParameter(PROTOCOL_KEY, DUBBO);
+    }
+
+    public String getServiceKey() {
+        if (consumerUrl == null) {
+            return null;
+        }
+        return consumerUrl.getServiceKey();
+    }
+
+    public String getProtocolServiceKey() {
+        if (consumerUrl == null) {
+            return null;
+        }
+        return consumerUrl.getProtocolServiceKey();
+    }
+
+    public URL getConsumerUrl() {
+        return consumerUrl;
+    }
+
+    public void setConsumerUrl(URL consumerUrl) {
+        this.consumerUrl = consumerUrl;
+    }
+
+    public static void setRpcContext(URL url) {
+        RpcContext rpcContext = RpcContext.getContext();
+        rpcContext.setConsumerUrl(url);
+    }
 }
